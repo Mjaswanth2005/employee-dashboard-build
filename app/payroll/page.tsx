@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PayslipCard } from "@/components/payslip-card"
 import { PayrollSummary } from "@/components/payroll-summary"
 import { SalaryDetailsTable } from "@/components/salary-details-table"
-import { mockPayslips } from "@/lib/mock-data"
+import { mockPayslips, mockEmployees } from "@/lib/mock-data"
 import { useAuthStore } from "@/lib/store"
 import { useState } from "react"
 import {
@@ -44,6 +44,7 @@ const deductionBreakdown = [
 function PayrollContent() {
   const { user } = useAuthStore()
   const [selectedPayslip, setSelectedPayslip] = useState(mockPayslips[0])
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("all")
 
   const handleExportPayroll = () => {
     const csv = [
@@ -189,6 +190,64 @@ function PayrollContent() {
           </Card>
         </div>
 
+        {/* All Employees Payroll Summary for HR/Admin */}
+        {canExport && (
+          <Card>
+            <CardHeader>
+              <CardTitle>All Employees Payroll Summary</CardTitle>
+              <CardDescription>Current month salary distribution</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-semibold">Employee</th>
+                      <th className="text-left py-3 px-4 font-semibold">ID</th>
+                      <th className="text-left py-3 px-4 font-semibold">Department</th>
+                      <th className="text-right py-3 px-4 font-semibold">Basic Salary</th>
+                      <th className="text-right py-3 px-4 font-semibold">HRA</th>
+                      <th className="text-right py-3 px-4 font-semibold">Allowances</th>
+                      <th className="text-right py-3 px-4 font-semibold">Gross Salary</th>
+                      <th className="text-right py-3 px-4 font-semibold">Deductions</th>
+                      <th className="text-right py-3 px-4 font-semibold">Net Salary</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mockEmployees.map((employee) => {
+                      const payslip = mockPayslips.find((p) => p.employeeId === employee.employeeId)
+                      const totalDeductions = payslip
+                        ? payslip.deductions.pf +
+                          payslip.deductions.esi +
+                          payslip.deductions.tax +
+                          payslip.deductions.other
+                        : 0
+
+                      return (
+                        <tr key={employee.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                          <td className="py-3 px-4 font-medium">{employee.name}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{employee.employeeId}</td>
+                          <td className="py-3 px-4">{employee.department}</td>
+                          <td className="text-right py-3 px-4">${employee.salary.basic.toLocaleString()}</td>
+                          <td className="text-right py-3 px-4">${employee.salary.hra.toLocaleString()}</td>
+                          <td className="text-right py-3 px-4">${employee.salary.allowances.toLocaleString()}</td>
+                          <td className="text-right py-3 px-4 font-semibold">
+                            ${employee.salary.ctc.toLocaleString()}
+                          </td>
+                          <td className="text-right py-3 px-4 text-destructive">${totalDeductions.toLocaleString()}</td>
+                          <td className="text-right py-3 px-4 font-bold text-accent">
+                            ${(employee.salary.ctc - totalDeductions).toLocaleString()}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* All Payslips */}
         <Card>
           <CardHeader>
@@ -197,9 +256,17 @@ function PayrollContent() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockPayslips.map((payslip) => (
-                <PayslipCard key={payslip.id} payslip={payslip} employeeName="John Doe" employeeId="EMP001" />
-              ))}
+              {mockPayslips.map((payslip) => {
+                const employee = mockEmployees.find((e) => e.employeeId === payslip.employeeId)
+                return (
+                  <PayslipCard
+                    key={payslip.id}
+                    payslip={payslip}
+                    employeeName={employee?.name || "Unknown"}
+                    employeeId={employee?.employeeId || "N/A"}
+                  />
+                )
+              })}
             </div>
           </CardContent>
         </Card>

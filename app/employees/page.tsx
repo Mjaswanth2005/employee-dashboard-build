@@ -37,17 +37,35 @@ function EmployeesContent() {
     setIsModalOpen(true)
   }
 
+  const handleAddEmployee = () => {
+    setSelectedEmployee(undefined)
+    setIsModalOpen(true)
+  }
+
   const handleEditEmployee = (employee: Employee) => {
     setSelectedEmployee(employee)
     setIsModalOpen(true)
   }
 
   const handleDeleteEmployee = (employeeId: string) => {
-    setEmployees((prev) => prev.filter((emp) => emp.id !== employeeId))
+    if (confirm("Are you sure you want to delete this employee?")) {
+      setEmployees((prev) => prev.filter((emp) => emp.id !== employeeId))
+      setIsModalOpen(false)
+    }
   }
 
   const handleSaveEmployee = (employee: Employee) => {
-    setEmployees((prev) => prev.map((emp) => (emp.id === employee.id ? employee : emp)))
+    if (employee.id && employees.some((emp) => emp.id === employee.id)) {
+      // Edit existing employee
+      setEmployees((prev) => prev.map((emp) => (emp.id === employee.id ? employee : emp)))
+    } else {
+      // Add new employee
+      const newEmployee = {
+        ...employee,
+        id: `${Date.now()}`,
+      }
+      setEmployees((prev) => [...prev, newEmployee])
+    }
     setIsModalOpen(false)
   }
 
@@ -63,8 +81,9 @@ function EmployeesContent() {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "employees.csv"
+    a.download = `employees-${new Date().toISOString().split("T")[0]}.csv`
     a.click()
+    window.URL.revokeObjectURL(url)
   }
 
   return (
@@ -80,7 +99,7 @@ function EmployeesContent() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button>
+            <Button onClick={handleAddEmployee}>
               <Plus className="h-4 w-4 mr-2" />
               Add Employee
             </Button>
@@ -139,7 +158,10 @@ function EmployeesContent() {
       <EmployeeModal
         employee={selectedEmployee}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedEmployee(undefined)
+        }}
         onSave={handleSaveEmployee}
       />
     </DashboardLayout>

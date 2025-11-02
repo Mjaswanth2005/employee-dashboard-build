@@ -27,20 +27,24 @@ export default function LoginPage() {
     try {
       if (!email || !password) {
         setError("Please fill in all fields")
+        setIsLoading(false)
         return
       }
 
       await login(email, password)
+      setEmail("")
+      setPassword("")
       router.push("/dashboard")
     } catch (err) {
       setError("Invalid email or password")
-    } finally {
       setIsLoading(false)
     }
   }
 
   const quickLogin = (emailPrefix: string) => {
     setEmail(`${emailPrefix}@company.com`)
+    setPassword("password")
+    setError("")
   }
 
   return (
@@ -64,6 +68,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  required
                 />
               </div>
             </div>
@@ -79,6 +84,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  required
                 />
               </div>
             </div>
@@ -100,15 +106,29 @@ export default function LoginPage() {
             <Alert className="bg-blue-50 border-blue-200">
               <InfoIcon className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-sm text-blue-800">
-                Demo Mode: Click a role below or use any password
+                Demo Mode: Click a role below to auto-fill credentials
               </AlertDescription>
             </Alert>
 
             <div className="grid grid-cols-3 gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => quickLogin("admin")} className="text-xs">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => quickLogin("admin")}
+                className="text-xs"
+                disabled={isLoading}
+              >
                 Admin
               </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => quickLogin("hr")} className="text-xs">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => quickLogin("hr")}
+                className="text-xs"
+                disabled={isLoading}
+              >
                 HR
               </Button>
               <Button
@@ -117,6 +137,7 @@ export default function LoginPage() {
                 size="sm"
                 onClick={() => quickLogin("employee")}
                 className="text-xs"
+                disabled={isLoading}
               >
                 Employee
               </Button>
